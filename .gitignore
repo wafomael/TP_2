@@ -1,0 +1,19 @@
+# ---- Visual Studio : rien de généré ne part sur git ----
+.vs/
+x64/
+Debug/
+Release/
+*.user
+*.ipch
+*.obj
+*.pdb
+*.ilk
+*.exe
+*.log
+*.tlog
+*.idb
+
+# ---- Divers ----
+*.zip
+Thumbs.db
+.DS_Store
