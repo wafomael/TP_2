@@ -15,7 +15,8 @@
 #include <fstream>
 #include <string>
 #include "Population.h"
-#include "Cellules.h"
+#include "ColorCell.h"
+#include "ChromoCell.h"
 #include "Affichage.h"
 #include "IO.h"
 
