@@ -10,8 +10,9 @@
 
 template <typename T>
 class Population {
-    std::vector<Individu<T>*> pop;   // index = id - 1 ; nullptr = supprimé (tombstone)
-    int prochainId = 1;
+private:
+    std::vector<Individu<T>*> individus;   // index = id - 1 ; nullptr = supprimé (tombstone)
+    int nextId = 1;
 
 public:
     Population() = default;
