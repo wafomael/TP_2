@@ -46,8 +46,20 @@ public:
 
     void afficherIndividu(int x) const;
 
+    // ---- API pour les transactions O / S [Dev C] ----
+
     // taille du vector (tombstones inclus)
     int taille() const;
+
+    // nombre d'individus vivants (non nullptr) — pour l'en-tete du fichier
+    int nbVivants() const;
+
+    // iteration lecture seule pour S : sauter les nullptr (tombstones)
+    const std::vector<Individu<T>*>& getIndividus() const;
+
+    // O : ajoute un individu en resolvant les ids parents lus dans le fichier
+    // (id <= 0 ou inexistant -> parent nullptr). Id doit suivre l'ordre du fichier.
+    Individu<T>* ajouterAvecParents(const T& v, int idP1, int idP2);
 };
 
 /*
@@ -168,6 +180,29 @@ void Population<T>::afficherIndividu(int x) const {
 template <typename T>
 int Population<T>::taille() const {
     return (int)individus.size();
+}
+
+template <typename T>
+int Population<T>::nbVivants() const {
+    int compte = 0;
+    for (Individu<T>* n : individus) {
+        if (n != nullptr) compte++;
+    }
+    return compte;
+}
+
+template <typename T>
+const std::vector<Individu<T>*>& Population<T>::getIndividus() const {
+    return individus;
+}
+
+template <typename T>
+Individu<T>* Population<T>::ajouterAvecParents(const T& v, int idP1, int idP2) {
+    Individu<T>* p1 = (idP1 > 0) ? get(idP1) : nullptr;
+    Individu<T>* p2 = (idP2 > 0) ? get(idP2) : nullptr;
+    Individu<T>* n = new Individu<T>(nextId++, v, p1, p2);
+    individus.push_back(n);
+    return n;
 }
 
 #endif // !POPULATION_H

@@ -28,4 +28,21 @@ template <typename T>
 Individu<T>::Individu(int identifiant, const T& v, Individu<T>* p1, Individu<T>* p2)
 	: id(identifiant), valeur(v), parent1(p1), parent2(p2) {}
 
+/*
+operator<< : format FICHIER (pas le format ecran "$" qui est "id : valeur")
+Ecrit une ligne au format POPULATION_TYPE.txt :
+    [Id] [IdParent1|/] [IdParent2|/] [valeur]
+Lecture symetrique : id, puis "/" ou int pour chaque parent, puis >> valeur.
+*/
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const Individu<T>& n) {
+	os << n.id << ' ';
+	if (n.parent1 != nullptr) os << n.parent1->id; else os << '/';
+	os << ' ';
+	if (n.parent2 != nullptr) os << n.parent2->id; else os << '/';
+	os << ' ' << n.valeur;
+	return os;
+}
+
 #endif // !INDIVIDU_H

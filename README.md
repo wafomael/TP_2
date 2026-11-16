@@ -36,6 +36,30 @@ Travail pratique 2 — Structures de données, UQAC, Automne 2026.
 | `? X Y` | Ancêtre commun le plus proche de X et Y |
 | `$ X` | Afficher l'arbre généalogique de X |
 
+## Formats — ne pas mélanger
+
+**Format FICHIER** (`POPULATION_TYPE.txt`, utilisé par `O`/`S`) :
+
+```
+TYPE nbIndividus                    ← ligne d'en-tête
+[Id] [IdParent1|/] [IdParent2|/] [valeur]     ← une ligne par individu
+```
+
+- `operator<<` de `Individu` produit **exactement** ce format → `out << *n`
+- Lecture symétrique : id, `/` ou int pour chaque parent, puis `>> valeur`
+- Les parents précèdent toujours leurs enfants dans le fichier
+
+**Format ÉCRAN** (`$`, `+`, `?`) : `"id : valeur"` — ce n'est PAS le format
+fichier, c'est l'affichage demandé par l'énoncé. Ne pas les confondre.
+
+## Points de contrat (ce que chacun peut utiliser)
+
+- `pop.getIndividus()` → itération lecture seule (sauter les `nullptr`)
+- `pop.nbVivants()` → pour l'en-tête du fichier
+- `pop.ajouterAvecParents(v, idP1, idP2)` → pour `O`, résout les ids via `get()`
+- `out << *individu` → ligne de fichier complète
+- `afficherArbre(pop->get(x))` → pour `$`
+
 ## Git — mise en place (une fois, par le responsable du repo)
 
 ```bash
