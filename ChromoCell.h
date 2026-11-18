@@ -14,6 +14,7 @@ Addition : paire i de C3 = gauche de la paire i de C1
            + droite de la paire i de C2.
            Ex: AB CD EF GH + IJ KL AC BD = AJ CL EC GD
 Format texte : "AB CD EF GH"  (couples separes par un espace)
+Dev B : FRANCK MARIUS NJIKE NFANGA
 */
 
 class ChromoCell {
@@ -29,11 +30,13 @@ public:
 	std::pair<char, char> getPaire(int i) const;
 	void setPaire(int i, char gauche, char droite);
 
-	// TODO [Dev B] : paire i = gauche(i) de C1 + droite(i) de C2
-	//                l'ordre des operandes compte !
+	// [Dev B : FRANCK MARIUS NJIKE NFANGA] paire i = gauche(i) de C1
+	//                                     + droite(i) de C2
+	//                                     (l'ordre des operandes compte !)
 	ChromoCell operator+(const ChromoCell& autre) const;
 
-	// TODO [Dev B] : affichage "AB CD EF GH" / lecture "AB CD EF GH"
+	// [Dev B : FRANCK MARIUS NJIKE NFANGA] affichage "AB CD EF GH"
+	//                                      lecture "AB CD EF GH"
 	friend std::ostream& operator<<(std::ostream& os, const ChromoCell& c);
 	friend std::istream& operator>>(std::istream& is, ChromoCell& c);
 };

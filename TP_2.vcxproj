@@ -142,6 +142,16 @@
     <ClCompile Include="TP_2.cpp" />
     <ClCompile Include="ColorCell.cpp" />
     <ClCompile Include="ChromoCell.cpp" />
+    <ClCompile Include="OuvrirFichier.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Affichage.h" />
+    <ClInclude Include="ChromoCell.h" />
+    <ClInclude Include="ColorCell.h" />
+    <ClInclude Include="Individu.h" />
+    <ClInclude Include="Manager.h" />
+    <ClInclude Include="OuvrirFichier.h" />
+    <ClInclude Include="Population.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

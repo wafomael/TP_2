@@ -2,9 +2,10 @@
 #include <iostream>
 
 
-// Constructeur par défaut : cellule noire (0 0 0).
-// Utilisé par "ColorCell c;" (ex: avant une lecture avec >>).
-ColorCell::ColorCell() : r(0), g(0), b(0) {}
+// Constructeur par défaut : cellule NULLE — composantes à -1
+// (impossible pour un RGB valide 0-255). La cellule n'a pas de
+// sens tant qu'elle n'a pas été remplie (>>, setters, ou operator+).
+ColorCell::ColorCell() : r(-1), g(-1), b(-1) {}
 
 // Constructeur avec valeurs : ColorCell c(0, 127, 127);
 ColorCell::ColorCell(int red, int green, int blue) : r(red), g(green), b(blue) {}
@@ -19,13 +20,18 @@ int ColorCell::getB() const {
     return b;
 }
 
+// Les setters bloquent les valeurs hors RGB valide [0, 255]
+// (ignore silencieusement, même convention que setPaire de ChromoCell)
 void ColorCell::setR(int v) {
+    if (v < 0 || v > 255) return;
     r = v;
 }
 void ColorCell::setG(int v) {
+    if (v < 0 || v > 255) return;
     g = v;
 }
 void ColorCell::setB(int v) {
+    if (v < 0 || v > 255) return;
     b = v;
 }
 
@@ -54,9 +60,17 @@ ColorCell ColorCell::operator+(const ColorCell& autre  ) const {
 // Si une valeur est hors limites, on met le flux en état d'échec, ce qui
 // permet à l'appelant d'écrire : if (flux >> cellule) { ... } else { erreur }
 std::istream& operator>>(std::istream& is, ColorCell& c) {
-    is >> c.r >> c.g >> c.b;
-    if (c.r < 0 || c.r > 255 || c.g < 0 || c.g > 255 || c.b < 0 || c.b > 255) {
-        is.setstate(std::ios::failbit);
+    int r, g, b;
+    if (!(is >> r >> g >> b)) {
+        return is;          // lecture échouée : flux déjà en échec
     }
+    if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+        is.setstate(std::ios::failbit);
+        return is;
+    }
+    // on ne touche c que si TOUT est valide (c intact en cas d'erreur)
+    c.setR(r);
+    c.setG(g);
+    c.setB(b);
     return is;
 }

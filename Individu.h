@@ -8,6 +8,7 @@
 Classe Individu<T> qui permet de stocker une valeur de type T
 (ColorCell ou ChromoCell), un identifiant et des pointeurs
 vers les deux parents (nullptr = parent inconnu)
+Dev A : WAFO FOKO Franck Mael
 */
 
 template <typename T>

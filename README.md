@@ -1,108 +1,101 @@
-# TP_2 — Arborescence génétique (8INF259)
+<p align="center">
+  <img src="https://thumb.wikimedia.org/wikipedia/fr/thumb/3/34/UQAC_Logo.png/330px-UQAC_Logo.png" alt="Logo UQAC" width="220">
+</p>
 
-Travail pratique 2 — Structures de données, UQAC, Automne 2026.
-**Remise : 18 novembre 2026, 23h55** (zip `nom_prenom_nom_prenom.zip` sur Moodle).
+<h1 align="center">TP2 : Arborescence génétique</h1>
 
-## Équipe et répartition
+<p align="center">
+  <b>8INF259 — Structures de données</b><br>
+  Enseignant : David Gagnon<br>
+  Groupe R  : FRANCK MARIUS NJIKE NFANGA · HOUNDETON BOTON Harold · WAFO FOKO Franck Mael
+</p>
 
-| Dev | Fichiers | Rôle |
+---
+
+## Présentation
+
+Ce programme simule une population d'individus et leur généalogie. Chaque individu possède une « cellule » — soit une couleur RGB (`ColorCell`), soit quatre paires de chromosomes (`ChromoCell`). Le programme lit un fichier de transactions passé en paramètre et exécute les opérations demandées : création d'une population (`C`), ajout d'un individu (`A`), chargement d'une population depuis un fichier (`O`), sauvegarde (`S`), croisement de deux individus (`+`), suppression d'un individu (`-`), recherche de l'ancêtre commun le plus proche (`?`) et affichage de l'arbre généalogique d'un individu (`$`).
+
+### Compilation et exécution
+
+L'exécutable prend un seul argument :
+
+```text
+TP_2.exe TRANSACTIONS.txt
+```
+
+### Répartition
+
+| Dev | Nom | Fichiers |
 |---|---|---|
-| **A** | `Individu.h`, `Population.h` | Node + catalogue : ajouter, additionner (+), supprimer (-), ancêtre commun (?) |
-| **B** | `Cellules.h`, `Affichage.h` | ColorCell/ChromoCell (+, <<, >>) + affichage arbre ($) |
-| **C** | `TP_2.cpp` (main), `IO.h` | Lecture TRANSACTIONS.txt, switch des opérations, charger (O) / sauvegarder (S) |
+| A | WAFO FOKO Franck Mael | `Individu.h`, `Population.h` |
+| B | FRANCK MARIUS NJIKE NFANGA | `ColorCell`, `ChromoCell`, `Affichage.h` |
+| C | HOUNDETON BOTON Harold | `TP_2.cpp` (main), `Manager.h`, `OuvrirFichier` |
 
-## Directives
+---
 
-1. **Chacun complète uniquement ses fichiers** — les signatures des `.h` sont le
-   contrat commun : on ne les change pas sans en parler à l'équipe.
-2. Les `TODO [Dev X]` indiquent qui code quoi.
-3. **Héritage INTERDIT** (consigne du prof) — généricité par templates uniquement.
-4. Librairie standard C++ uniquement.
-5. Les fonctions template s'implémentent **dans le .h** (règle C++).
-6. Le programme se lance avec le fichier de transactions en argument :
-   `TP_2.exe TRANSACTIONS.txt`
-7. Avant de push : le projet **doit compiler**. On ne push pas du code cassé sur main.
+## Démarche de conception
 
-## Opérations à supporter (TRANSACTIONS.txt)
+### 1. Identification des entités
 
-| Op | Signification |
-|---|---|
-| `C` | Créer une nouvelle population (type courant) |
-| `A` | Ajouter un individu sans parents |
-| `O` | Charger une population depuis un fichier |
-| `S` | Sauvegarder la population dans un fichier |
-| `+ X Y` | Créer un enfant de X et Y (fusion des valeurs) |
-| `- X` | Supprimer l'individu X (tombstone) |
-| `? X Y` | Ancêtre commun le plus proche de X et Y |
-| `$ X` | Afficher l'arbre généalogique de X |
+La première étape a été d'identifier les entités du problème : la **cellule** (la donnée portée par un individu), l'**individu** et la **population**. Les attributs de chacune ont ensuite été déterminés :
 
-## Formats — ne pas mélanger
+- `ColorCell` : trois entiers pour les composantes RGB ;
+- `ChromoCell` : quatre paires de chromosomes (lettres A à L) ;
+- `Individu<T>` : un identifiant, une valeur de type `T` et deux pointeurs vers ses parents ;
+- `Population<T>` : l'ensemble des individus et les opérations de l'énoncé.
 
-**Format FICHIER** (`POPULATION_TYPE.txt`, utilisé par `O`/`S`) :
+### 2. Deux classes cellules plutôt qu'un héritage
 
-```
-TYPE nbIndividus                    ← ligne d'en-tête
-[Id] [IdParent1|/] [IdParent2|/] [valeur]     ← une ligne par individu
-```
+À l'origine, nous voulions partir sur une classe de base `Cellule` dont `ColorCell` et `ChromoCell` hériteraient, ce qui aurait permis une population unique d'un point de vue conceptuel. Le devoir interdisant tout héritage, nous sommes partis sur **deux classes cellules indépendantes** ; la généricité est assurée par les templates `Individu<T>` et `Population<T>`.
 
-- `operator<<` de `Individu` produit **exactement** ce format → `out << *n`
-- Lecture symétrique : id, `/` ou int pour chaque parent, puis `>> valeur`
-- Les parents précèdent toujours leurs enfants dans le fichier
+Le choix des représentations :
 
-**Format ÉCRAN** (`$`, `+`, `?`) : `"id : valeur"` — ce n'est PAS le format
-fichier, c'est l'affichage demandé par l'énoncé. Ne pas les confondre.
+- `ColorCell` : trois `int` pour les canaux R, G et B (0 à 255) — l'addition de deux cellules donne la moyenne composante par composante : `R3 = (R1+R2)/2`, etc. ;
+- `ChromoCell` : un `std::array<char, 8>` — la structure la moins coûteuse pour stocker huit caractères fixes `[gauche1, droite1, …, gauche4, droite4]`. L'addition prend le chromosome gauche du premier parent et le droit du second pour chaque paire : `AB CD EF GH + IJ KL AC BD = AJ CL EC GD`.
 
-## Points de contrat (ce que chacun peut utiliser)
+### 3. Un catalogue indexé plutôt qu'un arbre classique
 
-- `pop.getIndividus()` → itération lecture seule (sauter les `nullptr`)
-- `pop.nbVivants()` → pour l'en-tête du fichier
-- `pop.ajouterAvecParents(v, idP1, idP2)` → pour `O`, résout les ids via `get()`
-- `out << *individu` → ligne de fichier complète
-- `afficherArbre(pop->get(x))` → pour `$`
+La généalogie du devoir n'est pas un « vrai » arbre à parcourir comme une structure chaînée : chaque individu possède un **identifiant séquentiel** commençant à 1. Un `std::vector<Individu<T>*>` offre alors un accès direct en **O(1)** (`index = id - 1`) et le tableau s'agrandit de lui-même — chaque nouvel individu est ajouté à la fin avec `push_back`, ce qui garantit que son id correspond toujours à sa position. La structure de données « arbre » émerge simplement des pointeurs `parent1`/`parent2` stockés dans chaque `Individu`.
 
-## Git — mise en place (une fois, par le responsable du repo)
+### 4. Suppression par tombstone
 
-```bash
-git init
-git add .
-git commit -m "squelette initial : .h du contrat + gitignore + readme"
-git branch -M main
-git remote add origin https://github.com/wafomael/TP_2.git
-git push -u origin main
-```
+Pour préserver la relation `id = index + 1`, un individu supprimé n'est **pas** retiré du vector (`erase` décalerait tous les indices suivants et casserait les identifiants). Sa case passe simplement à `nullptr` — une « pierre tombale ». Les enfants dont un parent a été supprimé affichent `inconnu` pour cette branche, et `delete nullptr` permet de libérer le vector sans test particulier.
 
-## Git — workflow quotidien (tout le monde)
+### 5. Surcharge des opérateurs
 
-```bash
-# 1. Récupérer le dépôt (première fois)
-git clone https://github.com/wafomael/TP_2.git
+Comme pour le TP1, les responsabilités de lecture/écriture sont réparties par surcharge d'opérateurs et fonctionnent en cascade : les `<<` / `>>` de `ColorCell` et `ChromoCell` servent ceux d'`Individu`, qui servent à leur tour ceux de `Population`. La population sait ainsi se sérialiser complètement (`out << pop` / `in >> pop`), et le gestionnaire de fichiers `Manager` ne fait que canaliser le flux. La surcharge d'`operator+` sur les cellules implémente les règles d'addition de l'énoncé, utilisée directement par la transaction `+ X Y`.
 
-# 2. TOUJOURS se mettre à jour avant de travailler
-git pull
+### 6. Ancêtre commun le plus proche
 
-# 3. Travailler dans SES fichiers, puis :
-git add Cellules.h            # ajouter ses fichiers modifiés (pas git add . à l'aveugle)
-git commit -m "ColorCell : operator+ et operator<<"
-git pull                      # intégrer les changements des autres AVANT de push
-git push
+La recherche remonte les parents par un parcours récursif depuis chacun des deux individus demandés, en mémorisant pour chaque ancêtre rencontré la distance la plus courte. On retient ensuite l'ancêtre commun qui minimise la somme des deux distances.
 
-# Voir l'état / l'historique
-git status
-git log --oneline
-```
+---
 
-### Règles d'équipe
+## Points discutés
 
-- **Messages de commit clairs** : `"Population : supprimer() avec tombstone"` plutôt que `"update"`.
-- `git pull` avant de commencer ET avant de push — ça évite 90 % des conflits.
-- Conflit sur un fichier qui n'est pas à toi → voir son propriétaire, ne pas résoudre à l'aveugle.
-- Ne jamais commiter `.vs/`, `x64/`, `*.exe` (le `.gitignore` s'en charge déjà).
+Certains points laissés flous par l'énoncé ont fait l'objet de choix documentés :
 
-## Compilation
+- **Ancêtres ex æquo** : si deux ancêtres communs sont à distance égale, le programme affiche le premier trouvé ;
+- **Lecture stricte des transactions** : un fichier mal formé continue d'être lu token par token et chaque symbole non reconnu produit `operation inconnue`, plutôt que d'avaler silencieusement la fin de la ligne ;
+- **Sauvegarde après suppressions** : les ids écrits conservent leur valeur d'origine (des « trous » peuvent donc apparaître) ; le format de fichier séquentiel de l'énoncé ne prévoit pas le rechargement de telles sauvegardes.
 
-- **Visual Studio** : ouvrir `TP_2.slnx`, build en Debug x64.
-- **Ligne de commande (g++)** :
-  ```bash
-  g++ -std=c++17 -o TP_2 TP_2.cpp
-  ./TP_2 TRANSACTIONS.txt
-  ```
+## Utilisation d'outils d'IA générative
+
+Developer A : WAFO FOKO Franck Mael
+-
+Les outils d'IA générative ont été utilisés pour :
+- Validation de l'implémentation et des choix architecturaux.
+- Génération de gros fichiers de transaction pour tester différents cas possibles.
+
+Developer B : FRANCK MARIUS NJIKE NFANGA
+Les outils d'IA générative ont été utilisés pour :
+- 
+
+Developer C : HOUNDETON BOTON Harold
+Les outils d'IA générative ont été utilisés pour :
+- 
+
+
+---
+La conception et l'implémentation ont été réalisées et validées par l'équipe.

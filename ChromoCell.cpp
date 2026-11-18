@@ -8,29 +8,43 @@
 // Seules getGauche, getDroite et setPaire font ce calcul ;
 // toutes les autres fonctions passent par elles.
 
-// Constructeur par défaut : "AA AA AA AA" (valeur valide plutôt que des
-// caractères au hasard). Utilisé par "ChromoCell c;" avant une lecture.
+// Constructeur par défaut : cellule VIDE — tous les chromosomes à '\0'
+// (caractère nul, jamais une lettre valide A-L). La cellule n'a pas de
+// sens tant qu'elle n'a pas été remplie (>>, setPaire, ou operator+).
 ChromoCell::ChromoCell() {
-    paires.fill('A');
+    paires.fill('\0');
 }
 
-// Lettre de gauche de la paire i (0 à 3)
+// Lettre de gauche de la paire i (0 à NB_PAIRES-1)
+// Hors bornes -> retourne '\0' (caractère nul), ne plante pas
 char ChromoCell::getGauche(int i) const {
+    if (i < 0 || i >= NB_PAIRES) {
+        return '\0';
+    }
     return paires[2 * i];
 }
 
-// Lettre de droite de la paire i (0 à 3)
+// Lettre de droite de la paire i (0 à NB_PAIRES-1)
+// Hors bornes -> retourne '\0' (caractère nul), ne plante pas
 char ChromoCell::getDroite(int i) const {
+    if (i < 0 || i >= NB_PAIRES) {
+        return '\0';
+    }
     return paires[2 * i + 1];
 }
 
 // Les deux lettres de la paire i ensemble
+// (la vérification de i est faite par getGauche/getDroite)
 std::pair<char, char> ChromoCell::getPaire(int i) const {
     return { getGauche(i), getDroite(i) };
 }
 
 // Remplace la paire i par les lettres gauche et droite
+// Hors bornes -> ne fait rien (bloque l'écriture)
 void ChromoCell::setPaire(int i, char gauche, char droite) {
+    if (i < 0 || i >= NB_PAIRES) {
+        return;
+    }
     paires[2 * i] = gauche;
     paires[2 * i + 1] = droite;
 }

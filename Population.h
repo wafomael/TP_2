@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <string>
 #include "Individu.h"
 
 /*
@@ -12,6 +13,7 @@ Classe Population<T> : catalogue d'individus (acces par id = index+1)
 L'arbre genealogique emerge des pointeurs parent1/parent2 des Individu.
 Pointeurs dans le vector : adresses stables malgre la reallocation
 du vector + "tombstones" (nullptr) pour les individus supprimes.
+Dev A : WAFO FOKO Franck Mael
 */
 
 template <typename T>
@@ -41,12 +43,12 @@ public:
     // acces par id (1-based) — retourne nullptr si invalide/supprime
     Individu<T>* get(int id) const;
 
-    // ? X Y : BFS vers les parents, ancetre commun le plus proche (somme min)
+    // ? X Y : DFS vers les parents, ancetre commun le plus proche (somme min)
     void ancetreCommun(int x, int y) const;
 
     void afficherIndividu(int x) const;
 
-    // ---- API pour les transactions O / S [Dev C] ----
+    // ---- API pour les transactions O / S (utilisee par Dev C) ----
 
     // taille du vector (tombstones inclus)
     int taille() const;
@@ -180,6 +182,57 @@ void Population<T>::afficherIndividu(int x) const {
 template <typename T>
 int Population<T>::taille() const {
     return (int)individus.size();
+}
+
+/*
+Operateurs flux : la Population sait se (de)serialiser en format FICHIER.
+operator<< -> corps du fichier : une ligne "[id] [p1|/] [p2|/] [valeur]"
+              par individu vivant (saute les tombstones).
+operator>> -> lit les lignes jusqu'a la fin du flux. Une ligne mal
+              formee met le flux en echec (failbit).
+              Note : ajoute aux individus existants — prevu pour une
+              Population fraichement creee (le main delete l'ancienne).
+*/
+template <typename T>
+std::ostream& operator<<(std::ostream& out, const Population<T>& pop) {
+    for (Individu<T>* n : pop.getIndividus()) {
+        if (n != nullptr) {
+            out << *n << '\n';
+        }
+    }
+    return out;
+}
+
+template <typename T>
+std::istream& operator>>(std::istream& in, Population<T>& population) {
+    int id;
+    std::string tokP1, tokP2;
+    while (in >> id) {
+        T valeur;
+        if (!(in >> tokP1 >> tokP2 >> valeur)) {
+            in.setstate(std::ios::failbit);   // ligne tronquee / valeur invalide
+            return in;
+        }
+        int idP1, idP2;
+        try {
+            idP1 = (tokP1 == "/") ? -1 : std::stoi(tokP1);
+            idP2 = (tokP2 == "/") ? -1 : std::stoi(tokP2);
+        } catch (...) {
+            in.setstate(std::ios::failbit);   // parent ni "/" ni entier
+            return in;
+        }
+        if (id != population.taille() + 1) {
+            in.setstate(std::ios::failbit);   // ids desordonnes / doublons
+            return in;
+        }
+        population.ajouterAvecParents(valeur, idP1, idP2);
+    }
+    // la boucle sort quand >> echoue : en fin de fichier eofbit ET
+    // failbit sont leves -> ce n'est PAS une erreur, on les retire
+    if (in.eof()) {
+        in.clear();
+    }
+    return in;
 }
 
 template <typename T>
